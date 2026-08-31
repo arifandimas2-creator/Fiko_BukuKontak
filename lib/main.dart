@@ -35,7 +35,15 @@ class BerandaPage extends StatefulWidget {
 
 class _BerandaPageState extends State<BerandaPage> {
   final List<Kontak> _daftarKontak = [];
-  final List<Kontak> _daftarFavorit = [];
+  
+  // Data diri Mu'ammar Akyas ditambahkan ke dalam daftar favorit
+  final List<Kontak> _daftarFavorit = [
+    Kontak(
+      nama: "Mu'ammar Akyas",
+      email: "akyas136@gmail.com",
+      noHp: "085641343755",
+    ),
+  ];
 
   void _navigasiKeTambahKontak() async {
     final Kontak? kontakBaru = await Navigator.push(
