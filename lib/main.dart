@@ -1,273 +1,189 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const BukuKontakApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+// 1. Class Kontak dengan properti kategori bertipe nullable (String?)
+class Kontak {
+  String nama;
+  String nomor;
+  String? kategori; // Properti nullable
+
+  // 2. Constructor dengan kategori opsional
+  Kontak({
+    required this.nama,
+    required this.nomor,
+    this.kategori, // Opsional (tidak wajib diisi)
+  });
+}
+
+class BukuKontakApp extends StatelessWidget {
+  const BukuKontakApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'Buku Kontak',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const BerandaPage(),
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        useMaterial3: true,
+      ),
+      home: const HomePage(),
     );
   }
 }
 
-class Kontak {
-  final String nama;
-  final String email;
-  final String noHp;
-
-  Kontak({required this.nama, required this.email, required this.noHp});
-}
-
-class BerandaPage extends StatefulWidget {
-  const BerandaPage({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  State<BerandaPage> createState() => _BerandaPageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _BerandaPageState extends State<BerandaPage> {
-  final List<Kontak> _daftarKontak = [];
+class _HomePageState extends State<HomePage> {
+  // List untuk menyimpan data kontak
+  final List<Kontak> _kontakList = [];
 
-  final List<Kontak> _daftarFavorit = [
-    Kontak(
-      nama: "Mu'ammar Akyas",
-      email: "akyas136@gmail.com",
-      noHp: "085641343755",
-    ),
-  ];
+  // Controller untuk mengambil input dari Form
+  final TextEditingController _namaController = TextEditingController();
+  final TextEditingController _nomorController = TextEditingController();
+  final TextEditingController _kategoriController = TextEditingController();
 
-  void _navigasiKeTambahKontak() async {
-    final Kontak? kontakBaru = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const TambahKontakPage()),
-    );
+  // Fungsi untuk menambah kontak baru
+  void _tambahKontak() {
+    final String nama = _namaController.text.trim();
+    final String nomor = _nomorController.text.trim();
+    final String kategoriInput = _kategoriController.text.trim();
 
-    if (kontakBaru != null) {
+    if (nama.isNotEmpty && nomor.isNotEmpty) {
       setState(() {
-        _daftarKontak.add(kontakBaru);
+        _kontakList.add(
+          Kontak(
+            nama: nama,
+            nomor: nomor,
+            // Jika input kategori kosong, simpan sebagai null
+            kategori: kategoriInput.isEmpty ? null : kategoriInput,
+          ),
+        );
       });
+
+      // Bersihkan inputan
+      _namaController.clear();
+      _nomorController.clear();
+      _kategoriController.clear();
+
+      // Tutup modal
+      Navigator.pop(context);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kontak berhasil ditambahkan!')),
+      );
     }
   }
 
-  void _navigasiKeTentang() {
-    Navigator.pop(context);
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const TentangPage()),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('BUKU KONTAK'),
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
-          bottom: const TabBar(
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            indicatorColor: Colors.purpleAccent,
-            tabs: [
-              Tab(icon: Icon(Icons.account_circle), text: 'Kontak'),
-              Tab(icon: Icon(Icons.star), text: 'Favorit'),
-            ],
+  // 3. Form Tambah Kontak dengan Input Kategori
+  void _showFormTambah() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) {
+        return Padding(
+          padding: EdgeInsets.only(
+            top: 20,
+            left: 20,
+            right: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
           ),
-        ),
-        drawer: Drawer(
-          child: ListView(
-            padding: EdgeInsets.zero,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const DrawerHeader(
-                decoration: BoxDecoration(color: Colors.blue),
-                child: Text(
-                  'BUKU KONTAK',
-                  style: TextStyle(color: Colors.white, fontSize: 24),
+              const Text(
+                'Tambah Kontak Baru',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: _namaController,
+                decoration: const InputDecoration(
+                  labelText: 'Nama Lengkap',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.person),
                 ),
               ),
-              ListTile(
-                leading: const Icon(Icons.account_box),
-                title: const Text('Kontak'),
-                onTap: () => Navigator.pop(context),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _nomorController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Nomor Telepon',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.phone),
+                ),
               ),
-              ListTile(
-                leading: const Icon(Icons.add),
-                title: const Text('Tambah Kontak'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _navigasiKeTambahKontak();
-                },
+              const SizedBox(height: 10),
+              // Input Tambahan untuk Kategori
+              TextField(
+                controller: _kategoriController,
+                decoration: const InputDecoration(
+                  labelText: 'Kategori (Opsional: Keluarga, Teman, Kerja)',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.category),
+                ),
               ),
-              ListTile(
-                leading: const Icon(Icons.star),
-                title: const Text('Favorit'),
-                onTap: () => Navigator.pop(context),
-              ),
-              ListTile(
-                leading: const Icon(Icons.info),
-                title: const Text('Tentang'),
-                onTap: _navigasiKeTentang,
+              const SizedBox(height: 15),
+              ElevatedButton(
+                onPressed: _tambahKontak,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(45),
+                ),
+                child: const Text('Simpan'),
               ),
             ],
           ),
-        ),
-        body: TabBarView(
-          children: [
-            _daftarKontak.isEmpty
-                ? const Center(child: Text('Belum ada kontak'))
-                : ListView.builder(
-                    itemCount: _daftarKontak.length,
-                    itemBuilder: (context, index) {
-                      final item = _daftarKontak[index];
-                      return ListTile(
-                        // TUGAS 3: Menggunakan CircleAvatar dengan inisial nama
-                        leading: CircleAvatar(
-                          child: Text(
-                            item.nama.isNotEmpty
-                                ? item.nama[0].toUpperCase()
-                                : '?',
-                          ),
-                        ),
-                        title: Text(item.nama),
-                        subtitle: Text('${item.email}\n${item.noHp}'),
-                      );
-                    },
-                  ),
-            _daftarFavorit.isEmpty
-                ? const Center(child: Text('Belum ada kontak favorit'))
-                : ListView.builder(
-                    itemCount: _daftarFavorit.length,
-                    itemBuilder: (context, index) {
-                      final item = _daftarFavorit[index];
-                      return ListTile(
-                        // TUGAS 3: Menggunakan CircleAvatar dengan inisial nama
-                        leading: CircleAvatar(
-                          child: Text(
-                            item.nama.isNotEmpty
-                                ? item.nama[0].toUpperCase()
-                                : '?',
-                          ),
-                        ),
-                        title: Text(item.nama),
-                        subtitle: Text('${item.email}\n${item.noHp}'),
-                      );
-                    },
-                  ),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: _navigasiKeTambahKontak,
-          child: const Icon(Icons.add),
-        ),
-      ),
+        );
+      },
     );
-  }
-}
-
-class TambahKontakPage extends StatefulWidget {
-  const TambahKontakPage({super.key});
-
-  @override
-  State<TambahKontakPage> createState() => _TambahKontakPageState();
-}
-
-class _TambahKontakPageState extends State<TambahKontakPage> {
-  final _namaController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _hpController = TextEditingController();
-
-  void _simpan() {
-    if (_namaController.text.isNotEmpty &&
-        _emailController.text.isNotEmpty &&
-        _hpController.text.isNotEmpty) {
-      final kontakBaru = Kontak(
-        nama: _namaController.text,
-        email: _emailController.text,
-        noHp: _hpController.text,
-      );
-      Navigator.pop(context, kontakBaru);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tambah Kontak'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        title: const Text('Daftar Kontak'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _namaController,
-              decoration: const InputDecoration(labelText: 'Nama Lengkap'),
+      body: _kontakList.isEmpty
+          ? const Center(
+              child: Text(
+                'Belum ada kontak.\nKlik tombol + untuk menambah.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey),
+              ),
+            )
+          : ListView.builder(
+              itemCount: _kontakList.length,
+              itemBuilder: (context, index) {
+                final kontak = _kontakList[index];
+                return ListTile(
+                  leading: CircleAvatar(
+                    child: Text(
+                      kontak.nama.isNotEmpty ? kontak.nama[0].toUpperCase() : '?',
+                    ),
+                  ),
+                  title: Text(kontak.nama),
+                  // 4. Menggunakan null-aware operator (??) untuk menampilkan 'Tanpa kategori'
+                  subtitle: Text(
+                    '${kontak.nomor} • ${kontak.kategori ?? 'Tanpa kategori'}',
+                  ),
+                  trailing: const Icon(Icons.call, color: Colors.teal),
+                );
+              },
             ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _hpController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(labelText: 'No Handphone'),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _simpan,
-              child: const Text('Simpan'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class TentangPage extends StatelessWidget {
-  const TentangPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Tentang'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            CircleAvatar(
-              radius: 50,
-              backgroundImage: AssetImage('assets/profile.jpg'),
-            ),
-            SizedBox(height: 15),
-            Text(
-              'Fiko Dafa',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 5),
-            Text('XII PPLG / RPL'),
-            SizedBox(height: 5),
-            Text('SMK Negeri 5 Surakarta'),
-          ],
-        ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showFormTambah,
+        child: const Icon(Icons.add),
       ),
     );
   }
